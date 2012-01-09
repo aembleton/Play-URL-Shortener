@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 
 import play.exceptions.TagInternalException;
@@ -17,9 +18,9 @@ import play.templates.GroovyTemplate.ExecutableTemplate;
 /**
  * URL Shortener tag. This accepts a URL and prints out a shortened version. Currently this only uses the URL Shortener provided by http://is.gd. is.gd was chosen as it provides shorter URLs than
  * other services and has a simple API that doesn't require any registration.
- *
+ * 
  * Invoke this by calling shorten url from a view in the following way:
- *
+ * 
  * <pre>
  * #{shorten.url 'http://www.example.com'/}
  * </pre>
@@ -31,6 +32,7 @@ import play.templates.GroovyTemplate.ExecutableTemplate;
 public class UrlShortener extends FastTags {
 
 	private static final String IS_GD = "http://is.gd/create.php?format=simple&url=";
+	private static final Map<String, String> CACHE = new HashMap<String, String>();
 
 	/**
 	 * Tag end point. This is called when view contains a call to shortener.url such as
@@ -46,10 +48,20 @@ public class UrlShortener extends FastTags {
 		}
 
 		String longUrl = ((String) args.get("arg")).trim();
+
+		// look in the cache
+		String shortUrl = CACHE.get(longUrl);
+
+		if (shortUrl != null) {
+			// found in the cache so use this
+			out.println(shortUrl);
+			return;
+		}
+
 		String requestURL = IS_GD + longUrl;
 
 		try {
-			String shortUrl = readUrl(requestURL);
+			shortUrl = readUrl(requestURL);
 
 			if (!shortUrl.startsWith("http")) {
 				// this is an invalid address, throw an exception
@@ -57,6 +69,7 @@ public class UrlShortener extends FastTags {
 				throw new TemplateExecutionException(template.template, fromLine, errorMsg, new TagInternalException(errorMsg));
 			}
 
+			CACHE.put(longUrl, shortUrl);
 			out.println(shortUrl);
 
 		} catch (IOException e) {
