@@ -10,6 +10,8 @@ pre. http://is.gd/RGW31T
 
 There is not currently any way of adding further parameters and only is.gd can be used.
 
+Once a short URL is found for a long URL, this mapping is stored in the play cache (play.cache.Cache) with the key set to "url-shortener_" followed by the long URL and the value set to the short URL.
+
 h2. Installation
 
 h3. Module installation

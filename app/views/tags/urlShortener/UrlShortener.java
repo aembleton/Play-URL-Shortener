@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import play.cache.Cache;
 import play.exceptions.TagInternalException;
 import play.exceptions.TemplateExecutionException;
 import play.templates.FastTags;
@@ -32,7 +33,7 @@ import play.templates.GroovyTemplate.ExecutableTemplate;
 public class UrlShortener extends FastTags {
 
 	private static final String IS_GD = "http://is.gd/create.php?format=simple&url=";
-	private static final Map<String, String> CACHE = new HashMap<String, String>();
+	private static final String CACHE_PREFIX = "url-shortener_";
 
 	/**
 	 * Tag end point. This is called when view contains a call to shortener.url such as
@@ -50,7 +51,7 @@ public class UrlShortener extends FastTags {
 		String longUrl = ((String) args.get("arg")).trim();
 
 		// look in the cache
-		String shortUrl = CACHE.get(longUrl);
+		String shortUrl = (String) Cache.get(CACHE_PREFIX+longUrl);
 
 		if (shortUrl != null) {
 			// found in the cache so use this
@@ -69,9 +70,9 @@ public class UrlShortener extends FastTags {
 				throw new TemplateExecutionException(template.template, fromLine, errorMsg, new TagInternalException(errorMsg));
 			}
 
-			CACHE.put(longUrl, shortUrl);
+			Cache.add(CACHE_PREFIX+longUrl, shortUrl);
 			out.println(shortUrl);
-
+			
 		} catch (IOException e) {
 			String errorMsg = longUrl + " could not be shortened";
 			throw new TemplateExecutionException(template.template, fromLine, errorMsg, new TagInternalException(errorMsg));
@@ -100,3 +101,4 @@ public class UrlShortener extends FastTags {
 		return result.toString();
 	}
 }
+
